@@ -22,45 +22,72 @@
             max-width: 400px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
+        }
+
+        .top-row {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
         }
 
         label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: #a0a0a0;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
+        /* Fjerner pile i volumenfeltet */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
         input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"], textarea {
             background-color: #2c2c2c;
             border: 1px solid #444;
             color: #fff;
-            padding: 15px;
-            font-size: 1.2rem;
-            border-radius: 8px;
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 6px;
             width: 100%;
             box-sizing: border-box;
             outline: none;
+        }
+
+        textarea {
+            height: 42px;
+            resize: none; /* Fjerner "håndtaget" i bunden af bemærkningsfeltet */
+            font-family: inherit;
+            overflow: hidden;
         }
 
         .timer-display {
             font-size: 3.5rem;
             font-weight: bold;
             text-align: center;
-            margin: 10px 0;
+            margin: 5px 0;
             font-variant-numeric: tabular-nums;
             color: #fff;
         }
 
         .main-btn {
-            padding: 20px;
-            border-radius: 12px;
+            padding: 18px;
+            border-radius: 10px;
             border: none;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
-            transition: background-color 0.2s;
             text-transform: uppercase;
         }
 
@@ -69,71 +96,77 @@
         
         .stats-box {
             background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 12px;
+            padding: 15px;
+            border-radius: 10px;
             border: 1px solid #333;
-            margin-top: 10px;
         }
 
         .stat-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .stat-value { font-weight: bold; color: #fff; }
         
         .info-box {
-            margin-top: 10px;
-            padding-top: 10px;
+            margin-top: 8px;
+            padding-top: 8px;
             border-top: 1px solid #333;
         }
 
         .guidance-text {
             display: block;
             color: #ffb74d;
-            font-size: 0.85rem;
-            margin-top: 8px;
+            font-size: 0.8rem;
             padding: 8px;
             background-color: rgba(255, 183, 77, 0.1);
             border-radius: 4px;
+            margin-bottom: 5px;
         }
 
         #reasonDisplay {
             display: block;
             color: #a0a0a0;
-            font-size: 0.85rem;
-            margin-top: 4px;
+            font-size: 0.8rem;
+            margin-top: 2px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            font-size: 0.9rem;
         }
 
-        th { text-align: left; color: #a0a0a0; font-weight: normal; padding-bottom: 10px; font-size: 0.9rem; }
-        td { padding: 12px 0; border-top: 1px solid #333; }
-        .delete-btn { color: #ff5252; background: none; border: none; cursor: pointer; font-size: 0.85rem; }
+        th { text-align: left; color: #a0a0a0; font-weight: normal; padding-bottom: 8px; }
+        td { padding: 10px 0; border-top: 1px solid #333; }
+        .delete-btn { color: #ff5252; background: none; border: none; cursor: pointer; font-size: 0.8rem; }
 
         .reset-btn {
             background: none;
             border: 1px solid #444;
             color: #a0a0a0;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 10px;
             width: 100%;
+            font-size: 0.8rem;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div style="display: flex; flex-direction: column;">
-            <label for="volume">Beholder volumen (liter)</label>
-            <input type="number" id="volume" placeholder="Indtast volumen" step="0.1">
+        <div class="top-row">
+            <div class="input-group">
+                <label for="volume">Volumen (L)</label>
+                <input type="number" id="volume" placeholder="Liter" step="0.1">
+            </div>
+            <div class="input-group">
+                <label for="notes">Bemærkninger</label>
+                <textarea id="notes"></textarea>
+            </div>
         </div>
 
         <div class="timer-display" id="timerDisplay">0.00</div>
@@ -154,7 +187,7 @@
                 <span class="stat-value" id="sdDisplay">-</span>
             </div>
             <div class="stat-row">
-                <span>CV (Variation):</span>
+                <span>CV:</span>
                 <span class="stat-value" id="cvDisplay">-</span>
             </div>
             <div class="info-box">
@@ -162,7 +195,7 @@
                     <span>Vurdering:</span>
                     <span class="stat-value" id="statusText">-</span>
                 </div>
-                <span id="reasonDisplay">Indtast volumen og start måling</span>
+                <span id="reasonDisplay">Klar til måling</span>
             </div>
         </div>
 
@@ -177,7 +210,7 @@
             <tbody id="resultsTable"></tbody>
         </table>
 
-        <button class="reset-btn" onclick="resetAll()">Nulstil alle målinger</button>
+        <button class="reset-btn" onclick="resetAll()">Nulstil målinger og tekst</button>
     </div>
 
     <script>
@@ -197,12 +230,13 @@
         const reasonDisplay = document.getElementById('reasonDisplay');
         const guidanceContainer = document.getElementById('guidanceContainer');
         const guidanceText = document.getElementById('guidanceText');
+        const notesArea = document.getElementById('notes');
 
         function toggleTimer() {
             const vol = parseFloat(volumeInput.value);
             
             if (isNaN(vol) || vol <= 0) {
-                alert("Indtast venligst volumen i liter før start.");
+                alert("Indtast volumen før start.");
                 return;
             }
 
@@ -273,22 +307,21 @@
                 if (stats.n < 3) {
                     statusText.textContent = "Tag flere";
                     statusText.style.color = "#ffb74d";
-                    reasonDisplay.textContent = `Minimum 3 målinger påkrævet (nu: ${stats.n}).`;
+                    reasonDisplay.textContent = `Antal målinger er utilstrækkeligt (nu: ${stats.n}).`;
                 } else if (stats.cv > 0.05) {
                     statusText.textContent = "Høj variation";
                     statusText.style.color = "#ffb74d";
-                    reasonDisplay.textContent = "CV overstiger 5%. Flere målinger anbefales.";
+                    reasonDisplay.textContent = "CV er over 5%. Flere målinger anbefales.";
                 } else {
                     statusText.textContent = "Lav variation";
                     statusText.style.color = "#81c784";
-                    reasonDisplay.textContent = "Variation er under 5% og antal målinger er tilstrækkeligt.";
+                    reasonDisplay.textContent = "CV er under 5% og antal målinger er tilstrækkeligt.";
                 }
 
                 const latest = measurements[measurements.length - 1];
                 if (latest.time < 10) {
                     const recVolRaw = latest.flow * 10;
                     let recVolStr = "";
-
                     if (recVolRaw < 1) {
                         const ml = Math.ceil(recVolRaw * 10) * 100;
                         recVolStr = ml + " ml";
@@ -296,8 +329,7 @@
                         const l = Math.ceil(recVolRaw * 2) / 2;
                         recVolStr = l.toFixed(1) + " L";
                     }
-                    
-                    guidanceText.textContent = `Måltid under 10 sekunder. Anvend beholder på min. ${recVolStr}.`;
+                    guidanceText.textContent = `Tid under 10 sek. Anvend beholder på min. ${recVolStr}.`;
                     guidanceContainer.style.display = "block";
                 } else {
                     guidanceContainer.style.display = "none";
@@ -319,9 +351,10 @@
         }
 
         function resetAll() {
-            if (confirm("Slet alle målinger?")) {
+            if (confirm("Nulstil alt?")) {
                 measurements = [];
                 timerDisplay.textContent = "0.00";
+                notesArea.value = "";
                 updateUI();
             }
         }
