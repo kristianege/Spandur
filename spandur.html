@@ -43,46 +43,34 @@
             outline: none;
         }
 
-        input:focus {
-            border-color: #666;
-        }
-
         .timer-display {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: bold;
             text-align: center;
-            font-variant-numeric: tabular-nums;
             margin: 10px 0;
+            font-variant-numeric: tabular-nums;
+            color: #fff;
         }
 
-        button {
+        .main-btn {
             padding: 20px;
-            font-size: 1.2rem;
+            border-radius: 12px;
             border: none;
-            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
             cursor: pointer;
             width: 100%;
-            font-weight: 600;
-            transition: opacity 0.2s;
+            transition: background-color 0.2s;
+            text-transform: uppercase;
         }
 
-        button:active {
-            opacity: 0.8;
-        }
-
-        #actionBtn {
-            background-color: #2e7d32; /* Grøn */
-            color: white;
-        }
-
-        #actionBtn.running {
-            background-color: #c62828; /* Rød */
-        }
-
+        .start-state { background-color: #4CAF50; color: white; }
+        .stop-state { background-color: #f44336; color: white; }
+        
         .stats-box {
             background-color: #1e1e1e;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 20px;
+            border-radius: 12px;
             border: 1px solid #333;
             margin-top: 10px;
         }
@@ -90,63 +78,71 @@
         .stat-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
-        .stat-value {
-            font-weight: bold;
-            font-variant-numeric: tabular-nums;
+        .stat-value { font-weight: bold; color: #fff; }
+        
+        .info-box {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+        }
+
+        .guidance-text {
+            display: block;
+            color: #ffb74d;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            padding: 8px;
+            background-color: rgba(255, 183, 77, 0.1);
+            border-radius: 4px;
+        }
+
+        #reasonDisplay {
+            display: block;
+            color: #a0a0a0;
+            font-size: 0.85rem;
+            margin-top: 4px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            font-size: 0.9rem;
         }
 
-        th {
-            text-align: left;
-            border-bottom: 1px solid #444;
-            padding: 8px;
+        th { text-align: left; color: #a0a0a0; font-weight: normal; padding-bottom: 10px; font-size: 0.9rem; }
+        td { padding: 12px 0; border-top: 1px solid #333; }
+        .delete-btn { color: #ff5252; background: none; border: none; cursor: pointer; font-size: 0.85rem; }
+
+        .reset-btn {
+            background: none;
+            border: 1px solid #444;
             color: #a0a0a0;
-        }
-
-        td {
-            padding: 8px;
-            border-bottom: 1px solid #222;
-        }
-
-        .delete-btn {
-            background-color: transparent;
-            color: #c62828;
-            border: 1px solid #c62828;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            width: auto;
-        }
-
-        .error-msg {
-            color: #ff6b6b;
-            font-size: 0.9rem;
-            display: none;
-            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <div>
-            <label for="volumeInput">Volumen på litermål (Liter)</label>
-            <input type="number" id="volumeInput" step="0.1" placeholder="Fx 3.0">
+        <div style="display: flex; flex-direction: column;">
+            <label for="volume">Beholder volumen (liter)</label>
+            <input type="number" id="volume" placeholder="Indtast volumen" step="0.1">
         </div>
 
-        <div class="timer-display" id="timer">0.00 s</div>
-        
-        <p class="error-msg" id="errorMsg">Angiv venligst volumen før start</p>
+        <div class="timer-display" id="timerDisplay">0.00</div>
 
-        <button id="actionBtn" onclick="toggleTimer()">Start Måling</button>
+        <button id="mainBtn" class="main-btn start-state" onclick="toggleTimer()">Start</button>
+        
+        <div id="guidanceContainer" style="display: none;">
+            <span id="guidanceText" class="guidance-text"></span>
+        </div>
 
         <div class="stats-box">
             <div class="stat-row">
@@ -154,8 +150,19 @@
                 <span class="stat-value" id="meanDisplay">- L/s</span>
             </div>
             <div class="stat-row">
-                <span>Standardafvigelse (SD):</span>
+                <span>Std. afvigelse:</span>
                 <span class="stat-value" id="sdDisplay">-</span>
+            </div>
+            <div class="stat-row">
+                <span>CV (Variation):</span>
+                <span class="stat-value" id="cvDisplay">-</span>
+            </div>
+            <div class="info-box">
+                <div class="stat-row">
+                    <span>Vurdering:</span>
+                    <span class="stat-value" id="statusText">-</span>
+                </div>
+                <span id="reasonDisplay">Indtast volumen og start måling</span>
             </div>
         </div>
 
@@ -163,82 +170,70 @@
             <thead>
                 <tr>
                     <th>Tid (s)</th>
-                    <th>Flow (L/s)</th>
-                    <th></th>
+                    <th>L/s</th>
+                    <th style="text-align: right;">Valg</th>
                 </tr>
             </thead>
-            <tbody id="resultsTable">
-                </tbody>
+            <tbody id="resultsTable"></tbody>
         </table>
+
+        <button class="reset-btn" onclick="resetAll()">Nulstil alle målinger</button>
     </div>
 
     <script>
-        let startTime;
-        let intervalId;
+        let measurements = [];
+        let startTime = null;
         let isRunning = false;
-        let measurements = []; // Gemmer objekter: { time: number, flow: number }
+        let timerInterval = null;
 
-        const timerDisplay = document.getElementById('timer');
-        const actionBtn = document.getElementById('actionBtn');
-        const volumeInput = document.getElementById('volumeInput');
+        const mainBtn = document.getElementById('mainBtn');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const volumeInput = document.getElementById('volume');
         const resultsTable = document.getElementById('resultsTable');
         const meanDisplay = document.getElementById('meanDisplay');
         const sdDisplay = document.getElementById('sdDisplay');
-        const errorMsg = document.getElementById('errorMsg');
+        const cvDisplay = document.getElementById('cvDisplay');
+        const statusText = document.getElementById('statusText');
+        const reasonDisplay = document.getElementById('reasonDisplay');
+        const guidanceContainer = document.getElementById('guidanceContainer');
+        const guidanceText = document.getElementById('guidanceText');
 
         function toggleTimer() {
-            const volume = parseFloat(volumeInput.value);
-
-            if (!volume || volume <= 0) {
-                errorMsg.style.display = 'block';
+            const vol = parseFloat(volumeInput.value);
+            
+            if (isNaN(vol) || vol <= 0) {
+                alert("Indtast venligst volumen i liter før start.");
                 return;
             }
-            errorMsg.style.display = 'none';
 
             if (!isRunning) {
-                // Start
-                isRunning = true;
                 startTime = Date.now();
-                actionBtn.textContent = "Stop & Beregn";
-                actionBtn.classList.add('running');
-                volumeInput.disabled = true; // Lås input under måling
-
-                intervalId = setInterval(() => {
-                    const elapsed = (Date.now() - startTime) / 1000;
-                    timerDisplay.textContent = elapsed.toFixed(2) + " s";
-                }, 50);
-
-            } else {
-                // Stop
-                isRunning = false;
-                clearInterval(intervalId);
-                actionBtn.textContent = "Start Måling";
-                actionBtn.classList.remove('running');
-                volumeInput.disabled = false;
-
-                const finalTime = (Date.now() - startTime) / 1000;
-                timerDisplay.textContent = finalTime.toFixed(2) + " s";
+                isRunning = true;
+                mainBtn.textContent = "Stop";
+                mainBtn.className = "main-btn stop-state";
                 
-                addMeasurement(finalTime, volume);
+                timerInterval = setInterval(() => {
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    timerDisplay.textContent = elapsed.toFixed(2);
+                }, 10);
+            } else {
+                clearInterval(timerInterval);
+                const durationSeconds = (Date.now() - startTime) / 1000;
+                const flow = vol / durationSeconds;
+                
+                measurements.push({ time: durationSeconds, flow: flow });
+                
+                isRunning = false;
+                mainBtn.textContent = "Start";
+                mainBtn.className = "main-btn start-state";
+                timerDisplay.textContent = durationSeconds.toFixed(2);
+                updateUI();
             }
-        }
-
-        function addMeasurement(time, volume) {
-            const flow = volume / time;
-            measurements.push({ time, flow });
-            updateUI();
-        }
-
-        function removeMeasurement(index) {
-            measurements.splice(index, 1);
-            updateUI();
         }
 
         function calculateStats() {
-            if (measurements.length === 0) {
-                return { mean: null, sd: null };
-            }
-
+            if (measurements.length === 0) return null;
+            
             const flows = measurements.map(m => m.flow);
             const n = flows.length;
             const mean = flows.reduce((a, b) => a + b, 0) / n;
@@ -249,35 +244,85 @@
                 sd = Math.sqrt(variance);
             }
 
-            return { mean, sd };
+            const cv = mean > 0 ? sd / mean : 0;
+            return { mean, sd, n, cv };
         }
 
         function updateUI() {
-            // Opdater tabel
             resultsTable.innerHTML = '';
-            measurements.forEach((m, index) => {
+            measurements.slice().reverse().forEach((m, index) => {
+                const actualIndex = measurements.length - 1 - index;
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${m.time.toFixed(2)}</td>
                     <td>${m.flow.toFixed(3)}</td>
                     <td style="text-align: right;">
-                        <button class="delete-btn" onclick="removeMeasurement(${index})">Slet</button>
+                        <button class="delete-btn" onclick="removeMeasurement(${actualIndex})">Slet</button>
                     </td>
                 `;
                 resultsTable.appendChild(row);
             });
 
-            // Opdater statistik
             const stats = calculateStats();
             
-            if (stats.mean !== null) {
+            if (stats) {
                 meanDisplay.textContent = stats.mean.toFixed(3) + " L/s";
-                sdDisplay.textContent = stats.sd !== null && measurements.length > 1 
-                    ? stats.sd.toFixed(3) 
-                    : (measurements.length === 1 ? "0.000" : "-");
+                sdDisplay.textContent = stats.n > 1 ? stats.sd.toFixed(4) : "0.0000";
+                cvDisplay.textContent = (stats.cv * 100).toFixed(1) + "%";
+
+                if (stats.n < 3) {
+                    statusText.textContent = "Tag flere";
+                    statusText.style.color = "#ffb74d";
+                    reasonDisplay.textContent = `Minimum 3 målinger påkrævet (nu: ${stats.n}).`;
+                } else if (stats.cv > 0.05) {
+                    statusText.textContent = "Høj variation";
+                    statusText.style.color = "#ffb74d";
+                    reasonDisplay.textContent = "CV overstiger 5%. Flere målinger anbefales.";
+                } else {
+                    statusText.textContent = "Lav variation";
+                    statusText.style.color = "#81c784";
+                    reasonDisplay.textContent = "Variation er under 5% og antal målinger er tilstrækkeligt.";
+                }
+
+                const latest = measurements[measurements.length - 1];
+                if (latest.time < 10) {
+                    const recVolRaw = latest.flow * 10;
+                    let recVolStr = "";
+
+                    if (recVolRaw < 1) {
+                        const ml = Math.ceil(recVolRaw * 10) * 100;
+                        recVolStr = ml + " ml";
+                    } else {
+                        const l = Math.ceil(recVolRaw * 2) / 2;
+                        recVolStr = l.toFixed(1) + " L";
+                    }
+                    
+                    guidanceText.textContent = `Måltid under 10 sekunder. Anvend beholder på min. ${recVolStr}.`;
+                    guidanceContainer.style.display = "block";
+                } else {
+                    guidanceContainer.style.display = "none";
+                }
+
             } else {
                 meanDisplay.textContent = "- L/s";
                 sdDisplay.textContent = "-";
+                cvDisplay.textContent = "-";
+                statusText.textContent = "-";
+                reasonDisplay.textContent = "Klar til måling";
+                guidanceContainer.style.display = "none";
+            }
+        }
+
+        function removeMeasurement(index) {
+            measurements.splice(index, 1);
+            updateUI();
+        }
+
+        function resetAll() {
+            if (confirm("Slet alle målinger?")) {
+                measurements = [];
+                timerDisplay.textContent = "0.00";
+                updateUI();
             }
         }
     </script>
